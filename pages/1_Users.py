@@ -1,7 +1,5 @@
 ## Packages ##
-from logging import PlaceHolder
 from unittest import main
-from xmlrpc.client import boolean
 import streamlit as st
 import snowflake.connector
 import pandas as pd
@@ -20,23 +18,14 @@ def connect_to_snowflake() -> object:
         ctx = snowflake.connector.connect( # Connection
         user = "sergiomartelo",
         password = "Cojowa214356.",
-        account = 'eia16549.us-east-1'
+        account = 'eia16549.us-east-1',
+        database = 'CHIPPER',
+        warehouse = 'CHIPPER_DATA'
         )
     except:
-        st.error("An error occurred logging in! Double check username and password.")
+        st.error("An error occurred connecting to Snowflake.")
     else: 
-        try:
-            ## Setup
-            cs = ctx.cursor()
-            cs.execute("USE DATABASE CHIPPER")
-            cs.execute("USE WAREHOUSE CHIPPER_DATA")
-            cs.execute("USE SCHEMA PUBLIC")    
-        except:
-            st.error("An error occurred!")
-        else:
-            return ctx
-        finally:
-            cs.close()
+        return ctx
 
 
 def user_scores(user_id: str, start_date: datetime.date, end_date: datetime.date) -> pd.DataFrame:
@@ -53,25 +42,9 @@ def user_scores(user_id: str, start_date: datetime.date, end_date: datetime.date
             DEPOSITS_SCORE AS "Deposits Score",
             UPDATED_AT AS "Date"
         FROM "CHIPPER"."UTILS"."USER_ENGAGEMENT_SCORE"
-        WHERE USER_ID = '""" + user_id + "' and UPDATED_AT BETWEEN '" + start_date.strftime('%Y-%m-%d') +"' AND '" + end_date.strftime('%Y-%m-%d')  + "' ORDER BY UPDATED_AT;"
+        WHERE USER_ID = '""" + user_id + "' and UPDATED_AT BETWEEN '" + start_date.strftime('%Y-%m-%d') + "' AND '" + end_date.strftime('%Y-%m-%d') + "' ORDER BY UPDATED_AT;"
     scores = pd.read_sql(ues_query, ctx)
     return scores
-
-
-def latest_ues (user_id: str) -> int:
-    ctx = connect_to_snowflake()
-
-    latest_ues_query = """
-    SELECT USER_ENGAGEMENT_SCORE, USER_ENGAGEMENT_BUCKET
-    FROM "CHIPPER"."UTILS"."USER_ENGAGEMENT_SCORE"
-    WHERE USER_ID = """ + user_id + """
-    ORDER BY UPDATED_AT DESC
-    LIMIT 1;"""
-    
-    latest_ues = pd.read_sql(latest_ues_query,ctx)
-
-    return latest_ues
-
 
 ## Page ##
 
@@ -79,8 +52,6 @@ def latest_ues (user_id: str) -> int:
 sidebar = st.sidebar
 
 sidebar.success("Select a page above.")
-
-
 
 #### Login ####
 

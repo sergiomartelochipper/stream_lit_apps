@@ -1,6 +1,23 @@
 ## Packages ##
 import streamlit as st
+import time 
 
+
+
+ACTIVITIES = {
+    "Deposited into Chipper": "Deposits", 
+    "Purchased through Chipper": "Purchases",
+    "Transfered funds P2P": "P2P Transfers",
+    "Invested through Chipper": "Investments"
+}
+
+def progress_bar(s: int) -> None:
+    bar = st.progress(0)
+    step = s/100
+
+    for percent_complete in range(100):
+        time.sleep(step)
+        bar.progress(percent_complete + 1)
 
 ## Page Config ##
 st.set_page_config(
@@ -18,11 +35,109 @@ st.sidebar.success("Select a page above.")
 #### Introduction ####
 """
 # UES Playground
+
+Use the playground below to get a better understanding on how user engagement scores are calculated and what user behavior affects it.
 """
 
-#### UES Bucket and Metric Playground ####
+
+#### Raw Features to UES ####
+
+raw_features_to_ues = st.container()
+
+with raw_features_to_ues:
+    """
+    ## Placeholder
+
+    placeholder
+    """
+    user_details = {}
+    user_activities = []
+
+    user_details['ACCOUNT_AGE_IN_DAYS'] = st.number_input(
+        label = "How old is the user's account in days?",
+        value = 0,
+        help = 'Please only input whole numbers.',
+        step = 1,
+        min_value = 0
+        )
+    
+
+    if user_details['ACCOUNT_AGE_IN_DAYS'] != 0:
+        transacted = st.radio(
+            label = "Has the user transacted in the last 90 days?",
+            options = ["No", "Yes"],
+            horizontal = True
+        )
+
+    if user_details['ACCOUNT_AGE_IN_DAYS'] != 0 and transacted == "Yes":
+        user_activities = st.multiselect(
+            label = 'What actions has the user taken in the past 90 days?',
+            options = ACTIVITIES.keys()
+        )
+    elif user_details['ACCOUNT_AGE_IN_DAYS'] != 0 and transacted == "No":
+        result = st.empty()
+        ues_info = [0.00, 'INACTIVE']
+
+        with result:
+            progress_bar(2)
+            score, bucket = st.columns(2)
+         
+            with score:
+                st.metric(
+                    label = "User's UES:",
+                    value = ues_info[0]
+                )
+            
+            with bucket:
+                st.metric(
+                    label = "User's UES Bucket:",
+                    value = ues_info[1]
+                )
+
+        
+    if len(user_activities) > 0:
+        """
+        Fill in the details on user activity below.
+        """
+    
+    for act in user_activities:
+
+        with st.expander('{} details'.format(ACTIVITIES[act])):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                user_details['DAYS_SINCE_LAST_{}'.format(ACTIVITIES[act])] = st.number_input(
+                    label = 'How many days has it been since the user {}?'.format(act.lower()),
+                    value = 0,
+                    help = 'Please only input whole numbers.',
+                    step = 1,
+                    min_value = 0, 
+                    key = 'DAYS_SINCE_LAST_{} input'.format(ACTIVITIES[act])
+                )
+            with col2:
+                user_details['TOTAL_USD_{}'.format(ACTIVITIES[act])] = st.number_input(
+                    label = 'Total USD {}:'.format(act.lower()),
+                    value = 0.0,
+                    step = 1.0,
+                    min_value = 0.0, 
+                    key = 'TOTAL_USD_{} input'.format(ACTIVITIES[act])
+                )
+                user_details['TOTAL_TRANSACTIONS_{}'.format(ACTIVITIES[act])] = st.number_input(
+                    label = 'Number of Transactions of this type:',
+                    value = 0,
+                    help = 'Please only input whole numbers.',
+                    step = 1,
+                    min_value = 0, 
+                    key = 'TOTAL_TRANSACTIONS_{} input'.format(ACTIVITIES[act])
+                )
+
+#### Transaction Scores to UES ####
 
 # UES Score and Bucket Displays
+
+"""
+## Transaction Scores to UES
+"""
 
 scores_to_ues = st.expander('Scores to UES Explorer')
 
