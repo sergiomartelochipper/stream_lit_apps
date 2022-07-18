@@ -27,7 +27,7 @@ def connect_to_snowflake() -> object:
     else: 
         return ctx
 
-
+@st.cache
 def user_scores(user_id: str, start_date: datetime.date, end_date: datetime.date) -> pd.DataFrame:
     ctx = connect_to_snowflake()
     ues_query = """
